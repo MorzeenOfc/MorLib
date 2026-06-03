@@ -27,17 +27,13 @@ local ARCADE_FONT = Enum.Font.Arcade
 -- ── Helpers ───────────────────────────────────────────────
 local function tw(obj, props, t, style, dir)
     TweenService:Create(obj,
-        TweenInfo.new(t or 0.18,
-            style or Enum.EasingStyle.Quad,
-            dir   or Enum.EasingDirection.Out),
+        TweenInfo.new(t or 0.18, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out),
         props):Play()
 end
 
 local function make(class, props, parent)
     local i = Instance.new(class)
-    for k, v in pairs(props or {}) do
-        pcall(function() i[k] = v end)
-    end
+    for k, v in pairs(props or {}) do pcall(function() i[k] = v end) end
     if parent then i.Parent = parent end
     return i
 end
@@ -50,8 +46,8 @@ end
 
 local function uistroke(col, th, parent)
     local s = Instance.new("UIStroke")
-    s.Color     = col or T.border
-    s.Thickness = th  or 1
+    s.Color = col or T.border
+    s.Thickness = th or 1
     s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     s.Parent = parent
     return s
@@ -59,9 +55,9 @@ end
 
 local function uipad(l, r, t, b, parent)
     local p = Instance.new("UIPadding")
-    p.PaddingLeft   = UDim.new(0, l or 0)
-    p.PaddingRight  = UDim.new(0, r or 0)
-    p.PaddingTop    = UDim.new(0, t or 0)
+    p.PaddingLeft = UDim.new(0, l or 0)
+    p.PaddingRight = UDim.new(0, r or 0)
+    p.PaddingTop = UDim.new(0, t or 0)
     p.PaddingBottom = UDim.new(0, b or 0)
     p.Parent = parent
 end
@@ -69,8 +65,8 @@ end
 local function uilayout(parent, padding)
     local l = Instance.new("UIListLayout")
     l.SortOrder = Enum.SortOrder.LayoutOrder
-    l.Padding   = UDim.new(0, padding or 4)
-    l.Parent    = parent
+    l.Padding = UDim.new(0, padding or 4)
+    l.Parent = parent
     return l
 end
 
@@ -86,6 +82,7 @@ UserInputService.InputChanged:Connect(function(i)
         )
     end
 end)
+
 UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
@@ -93,12 +90,16 @@ UserInputService.InputEnded:Connect(function(i)
 end)
 
 -- ══════════════════════════════════════════════════════════
--- ELEMENT RENDERERS (Visual Improvements Only)
+-- ELEMENT RENDERERS
 -- ══════════════════════════════════════════════════════════
 
 -- ── Toggle ────────────────────────────────────────────────
 local function renderToggle(opt, parent)
-    local row = make("Frame", { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1, LayoutOrder = opt._order or 0 }, parent)
+    local row = make("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+    }, parent)
 
     make("TextLabel", {
         Size = UDim2.new(1, -56, 1, 0),
@@ -111,8 +112,12 @@ local function renderToggle(opt, parent)
         TextXAlignment = Enum.TextXAlignment.Left,
     }, row)
 
-    -- ... (rest of toggle unchanged)
-    local track = make("Frame", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.new(0, 38, 0, 21), BackgroundColor3 = opt.state and T.accent or T.surface3 }, row)
+    local track = make("Frame", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -10, 0.5, 0),
+        Size = UDim2.new(0, 38, 0, 21),
+        BackgroundColor3 = opt.state and T.accent or T.surface3,
+    }, row)
     corner(11, track)
     uistroke(T.border, 1, track)
 
@@ -136,17 +141,21 @@ local function renderToggle(opt, parent)
 
     local textLbl = row:FindFirstChildOfClass("TextLabel")
     row.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then setState(not opt.state) end
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            setState(not opt.state)
+        end
     end)
     row.MouseEnter:Connect(function() tw(textLbl, { TextColor3 = T.accentLight }, 0.1) end)
     row.MouseLeave:Connect(function() tw(textLbl, { TextColor3 = T.text }, 0.1) end)
 end
 
--- ── Button, Label, Slider, Dropdown, Bind ────────────────────────────────────────────────
--- (All text changed to ARCADE_FONT. No functional changes)
-
+-- ── Button ────────────────────────────────────────────────
 local function renderButton(opt, parent)
-    local row = make("Frame", { Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = 1, LayoutOrder = opt._order or 0 }, parent)
+    local row = make("Frame", {
+        Size = UDim2.new(1, 0, 0, 36),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+    }, parent)
 
     local btn = make("TextButton", {
         Size = UDim2.new(1, -16, 1, -8),
@@ -162,11 +171,18 @@ local function renderButton(opt, parent)
     uistroke(T.border, 1, btn)
 
     btn.MouseButton1Down:Connect(function() tw(btn, { BackgroundColor3 = T.accent }, 0.1) end)
-    btn.MouseButton1Up:Connect(function() tw(btn, { BackgroundColor3 = T.surface3 }, 0.18) task.spawn(pcall, opt.callback) end)
-    btn.MouseEnter:Connect(function() tw(btn, { BackgroundColor3 = T.surface2 + Color3.fromRGB(12,12,14) }, 0.1) uistroke(T.borderLight, 1, btn) end)
+    btn.MouseButton1Up:Connect(function()
+        tw(btn, { BackgroundColor3 = T.surface3 }, 0.18)
+        task.spawn(pcall, opt.callback)
+    end)
+    btn.MouseEnter:Connect(function()
+        tw(btn, { BackgroundColor3 = T.surface2 + Color3.fromRGB(12,12,14) }, 0.1)
+        uistroke(T.borderLight, 1, btn)
+    end)
     btn.MouseLeave:Connect(function() tw(btn, { BackgroundColor3 = T.surface3 }, 0.1) end)
 end
 
+-- ── Label ─────────────────────────────────────────────────
 local function renderLabel(opt, parent)
     local lbl = make("TextLabel", {
         Size = UDim2.new(1, 0, 0, 24),
@@ -179,25 +195,338 @@ local function renderLabel(opt, parent)
         LayoutOrder = opt._order or 0,
     }, parent)
 
-    function opt:SetText(v) lbl.Text = "  " .. tostring(v) end
-    setmetatable(opt, { __newindex = function(t, k, v)
-        if k == "Text" then lbl.Text = "  " .. tostring(v) end
-        rawset(t, k, v)
-    end})
+    function opt:SetText(v)
+        lbl.Text = "  " .. tostring(v)
+    end
+    setmetatable(opt, {
+        __newindex = function(t, k, v)
+            if k == "Text" then lbl.Text = "  " .. tostring(v) end
+            rawset(t, k, v)
+        end,
+    })
 end
 
--- (Slider, Dropdown, Bind kept with ARCADE_FONT applied to all TextLabels/TextButtons - omitted for brevity, same pattern as above)
+-- ── Slider ────────────────────────────────────────────────
+local function renderSlider(opt, parent)
+    local TRACK = 4
+    local wrapper = make("Frame", {
+        Size = UDim2.new(1, 0, 0, 54),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+    }, parent)
 
--- ── Folder (Improved Arrow) ────────────────────────────────────────────────
+    make("TextLabel", {
+        Size = UDim2.new(1, -64, 0, 22),
+        Position = UDim2.new(0, 10, 0, 4),
+        BackgroundTransparency = 1,
+        Text = opt.text,
+        TextSize = 14,
+        Font = ARCADE_FONT,
+        TextColor3 = T.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, wrapper)
+
+    local valLbl = make("TextLabel", {
+        Size = UDim2.new(0, 54, 0, 22),
+        Position = UDim2.new(1, -64, 0, 4),
+        BackgroundTransparency = 1,
+        Text = tostring(opt.value),
+        TextSize = 13,
+        Font = ARCADE_FONT,
+        TextColor3 = T.accent,
+        TextXAlignment = Enum.TextXAlignment.Right,
+    }, wrapper)
+
+    local trackBg = make("Frame", {
+        Size = UDim2.new(1, -20, 0, TRACK),
+        Position = UDim2.new(0, 10, 0, 38),
+        BackgroundColor3 = T.surface3,
+    }, wrapper)
+    corner(TRACK, trackBg)
+
+    local pct0 = (opt.value - opt.min) / (opt.max - opt.min)
+    local fill = make("Frame", { Size = UDim2.new(pct0, 0, 1, 0), BackgroundColor3 = T.accent }, trackBg)
+    corner(TRACK, fill)
+
+    local TS = 14
+    local thumb = make("Frame", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(pct0, 0, 0.5, 0),
+        Size = UDim2.new(0, TS, 0, TS),
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        ZIndex = 2,
+    }, trackBg)
+    corner(TS / 2, thumb)
+
+    local sliding = false
+
+    local function setValue(v)
+        local r = math.floor(v / opt.float + 0.5) * opt.float
+        r = math.clamp(r, opt.min, opt.max)
+        opt.value = r
+        MorLib.flags[opt.flag] = r
+        local p = (r - opt.min) / (opt.max - opt.min)
+        fill.Size = UDim2.new(p, 0, 1, 0)
+        thumb.Position = UDim2.new(p, 0, 0.5, 0)
+        valLbl.Text = tostring(r)
+        pcall(opt.callback, r)
+    end
+
+    function opt:SetValue(v) setValue(v) end
+
+    local function fromMouse(x)
+        local p = math.clamp((x - trackBg.AbsolutePosition.X) / trackBg.AbsoluteSize.X, 0, 1)
+        setValue(opt.min + p * (opt.max - opt.min))
+    end
+
+    trackBg.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            sliding = true
+            tw(thumb, { Size = UDim2.new(0, TS + 4, 0, TS + 4), BackgroundColor3 = T.accentLight }, 0.12)
+            fromMouse(i.Position.X)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then
+            fromMouse(i.Position.X)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 and sliding then
+            sliding = false
+            tw(thumb, { Size = UDim2.new(0, TS, 0, TS), BackgroundColor3 = Color3.new(1,1,1) }, 0.12)
+        end
+    end)
+end
+
+-- ── Dropdown ──────────────────────────────────────────────
+local function renderList(opt, parent)
+    local ROW_H = 54
+    local wrapper = make("Frame", {
+        Size = UDim2.new(1, 0, 0, ROW_H),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+        ClipsDescendants = false,
+    }, parent)
+
+    local box = make("Frame", {
+        Size = UDim2.new(1, -16, 0, ROW_H - 10),
+        Position = UDim2.new(0, 8, 0, 5),
+        BackgroundColor3 = T.surface3,
+    }, wrapper)
+    corner(7, box)
+    uistroke(T.border, 1, box)
+
+    make("TextLabel", {
+        Size = UDim2.new(1, -30, 0, 16),
+        Position = UDim2.new(0, 10, 0, 6),
+        BackgroundTransparency = 1,
+        Text = opt.text,
+        TextSize = 12,
+        Font = ARCADE_FONT,
+        TextColor3 = T.textDim,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, box)
+
+    local valLbl = make("TextLabel", {
+        Size = UDim2.new(1, -30, 0, 20),
+        Position = UDim2.new(0, 10, 0, 22),
+        BackgroundTransparency = 1,
+        Text = opt.value,
+        TextSize = 14,
+        Font = ARCADE_FONT,
+        TextColor3 = T.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, box)
+
+    local arrow = make("TextLabel", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -10, 0.5, 0),
+        Size = UDim2.new(0, 20, 0, 20),
+        BackgroundTransparency = 1,
+        Text = "▾",
+        TextSize = 14,
+        Font = ARCADE_FONT,
+        TextColor3 = T.textDim,
+    }, box)
+
+    local popup = make("Frame", {
+        Position = UDim2.new(0, 8, 1, 2),
+        Size = UDim2.new(1, -16, 0, 0),
+        BackgroundColor3 = T.surface2,
+        ClipsDescendants = true,
+        ZIndex = 5,
+        Visible = false,
+    }, wrapper)
+    corner(7, popup)
+    uistroke(T.borderLight, 1, popup)
+
+    local popLayout = uilayout(popup, 2)
+    uipad(4, 4, 4, 4, popup)
+
+    opt._open = false
+
+    local function closeList()
+        opt._open = false
+        arrow.Text = "▾"
+        tw(popup, { Size = UDim2.new(1, -16, 0, 0) }, 0.18)
+        task.delay(0.2, function() if not opt._open then popup.Visible = false end end)
+        tw(wrapper, { Size = UDim2.new(1, 0, 0, ROW_H) }, 0.18)
+    end
+
+    local function openList()
+        opt._open = true
+        arrow.Text = "▴"
+        popup.Visible = true
+        local count = math.min(#opt.values, 5)
+        local popH = count * 32 + 8
+        tw(popup, { Size = UDim2.new(1, -16, 0, popH) }, 0.2, Enum.EasingStyle.Back)
+        tw(wrapper, { Size = UDim2.new(1, 0, 0, ROW_H + popH + 4) }, 0.2, Enum.EasingStyle.Back)
+    end
+
+    local function addValue(value)
+        local item = make("TextButton", {
+            Size = UDim2.new(1, 0, 0, 30),
+            BackgroundColor3 = T.surface3,
+            Text = tostring(value),
+            TextSize = 13,
+            Font = ARCADE_FONT,
+            TextColor3 = T.text,
+            AutoButtonColor = false,
+            ZIndex = 5,
+        }, popup)
+        corner(5, item)
+
+        item.MouseButton1Click:Connect(function()
+            opt.value = tostring(value)
+            MorLib.flags[opt.flag] = opt.value
+            valLbl.Text = opt.value
+            pcall(opt.callback, value)
+            closeList()
+        end)
+        item.MouseEnter:Connect(function() tw(item, { BackgroundColor3 = T.accent }, 0.1) end)
+        item.MouseLeave:Connect(function() tw(item, { BackgroundColor3 = T.surface3 }, 0.1) end)
+    end
+
+    for _, v in ipairs(opt.values) do addValue(tostring(v)) end
+
+    function opt:AddValue(v) addValue(tostring(v)) end
+    function opt:SetValue(v)
+        self.value = tostring(v)
+        MorLib.flags[self.flag] = self.value
+        valLbl.Text = self.value
+        pcall(self.callback, v)
+    end
+    function opt:Close() closeList() end
+
+    box.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            if opt._open then closeList() else openList() end
+        end
+    end)
+    box.MouseEnter:Connect(function() uistroke(T.borderLight, 1, box) end)
+    box.MouseLeave:Connect(function() uistroke(T.border, 1, box) end)
+end
+
+-- ── Bind ──────────────────────────────────────────────────
+local BIND_BLACKLIST = { Enum.KeyCode.Unknown, Enum.KeyCode.Return, Enum.KeyCode.Escape, Enum.KeyCode.Tab, Enum.KeyCode.Backspace, Enum.KeyCode.Delete, Enum.KeyCode.CapsLock }
+
+local function renderBind(opt, parent)
+    local row = make("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+    }, parent)
+
+    make("TextLabel", {
+        Size = UDim2.new(0.6, 0, 1, 0),
+        Position = UDim2.new(0, 10, 0, 0),
+        BackgroundTransparency = 1,
+        Text = opt.text,
+        TextSize = 14,
+        Font = ARCADE_FONT,
+        TextColor3 = T.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, row)
+
+    local keyBtn = make("TextButton", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -10, 0.5, 0),
+        Size = UDim2.new(0, 58, 0, 22),
+        BackgroundColor3 = T.surface3,
+        Text = opt.key,
+        TextSize = 12,
+        Font = ARCADE_FONT,
+        TextColor3 = T.text,
+        AutoButtonColor = false,
+    }, row)
+    corner(5, keyBtn)
+    uistroke(T.border, 1, keyBtn)
+
+    local binding = false
+
+    local function setKey(key)
+        binding = false
+        opt.key = type(key) == "string" and key or key.Name
+        MorLib.flags[opt.flag] = opt.key
+        keyBtn.Text = opt.key
+        tw(keyBtn, { BackgroundColor3 = T.surface3 }, 0.15)
+    end
+    function opt:SetKey(k) setKey(k) end
+
+    keyBtn.MouseButton1Click:Connect(function()
+        if binding then return end
+        binding = true
+        keyBtn.Text = "..."
+        tw(keyBtn, { BackgroundColor3 = T.accent }, 0.15)
+    end)
+
+    UserInputService.InputBegan:Connect(function(i)
+        if UserInputService:GetFocusedTextBox() then return end
+        if binding then
+            if i.KeyCode == Enum.KeyCode.Escape then setKey(opt.key); return end
+            local blocked = false
+            for _, k in ipairs(BIND_BLACKLIST) do
+                if k == i.KeyCode then blocked = true; break end
+            end
+            if not blocked then setKey(i.KeyCode) end
+            return
+        end
+        if i.KeyCode.Name == opt.key or i.UserInputType.Name == opt.key then
+            if opt.hold then
+                local loop = RunService.Heartbeat:Connect(function() pcall(opt.callback) end)
+                UserInputService.InputEnded:Connect(function(ev)
+                    if (ev.KeyCode.Name == opt.key or ev.UserInputType.Name == opt.key) then loop:Disconnect() end
+                end)
+            else
+                task.spawn(pcall, opt.callback)
+            end
+        end
+    end)
+
+    keyBtn.MouseEnter:Connect(function() tw(keyBtn, { BackgroundColor3 = T.surface2 }, 0.1) end)
+    keyBtn.MouseLeave:Connect(function() tw(keyBtn, { BackgroundColor3 = T.surface3 }, 0.1) end)
+end
+
+-- ── Folder ────────────────────────────────────────────────
 local function renderFolder(folder, parent)
     local HEADER = 34
-    local card = make("Frame", { Size = UDim2.new(1, 0, 0, HEADER), BackgroundColor3 = T.surface, ClipsDescendants = true, LayoutOrder = folder._order or 0 }, parent)
+    local card = make("Frame", {
+        Size = UDim2.new(1, 0, 0, HEADER),
+        BackgroundColor3 = T.surface,
+        ClipsDescendants = true,
+        LayoutOrder = folder._order or 0,
+    }, parent)
     corner(8, card)
     uistroke(T.border, 1, card)
 
     local header = make("Frame", { Size = UDim2.new(1, 0, 0, HEADER), BackgroundTransparency = 1 }, card)
 
-    local accentBar = make("Frame", { Size = UDim2.new(0, 3, 0, 16), Position = UDim2.new(0, 8, 0.5, -8), BackgroundColor3 = T.accent }, header)
+    local accentBar = make("Frame", {
+        Size = UDim2.new(0, 3, 0, 16),
+        Position = UDim2.new(0, 8, 0.5, -8),
+        BackgroundColor3 = T.accent,
+    }, header)
     corner(2, accentBar)
 
     make("TextLabel", {
@@ -211,11 +540,11 @@ local function renderFolder(folder, parent)
         TextXAlignment = Enum.TextXAlignment.Left,
     }, header)
 
-    -- Modern square arrow button using image
+    -- Square Button with Image
     local arrowBtn = make("TextButton", {
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -12, 0.5, 0),
-        Size = UDim2.new(0, 22, 0, 22),
+        Size = UDim2.new(0, 24, 0, 24),
         BackgroundColor3 = T.surface3,
         Text = "",
         AutoButtonColor = false,
@@ -224,34 +553,42 @@ local function renderFolder(folder, parent)
     uistroke(T.border, 1, arrowBtn)
 
     local arrowImg = make("ImageLabel", {
-        Size = UDim2.new(0.65, 0, 0.65, 0),
+        Size = UDim2.new(0.7, 0, 0.7, 0),
         Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
         Image = "rbxassetid://121192881188177",
         ImageColor3 = T.textDim,
-        Rotation = folder.open and -90 or 90, -- Up / Down
+        Rotation = folder.open and -90 or 90, -- Up = maximized, Down = minimized
     }, arrowBtn)
 
-    -- Body (unchanged)
-    local body = make("Frame", { Position = UDim2.new(0, 0, 0, HEADER), Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1 }, card)
+    local body = make("Frame", {
+        Position = UDim2.new(0, 0, 0, HEADER),
+        Size = UDim2.new(1, 0, 0, 0),
+        BackgroundTransparency = 1,
+    }, card)
+
     local bodyLayout = uilayout(body, 3)
     uipad(8, 8, 5, 6, body)
 
-    -- Render children...
     local order = 0
     for _, opt in ipairs(folder.options) do
         opt._order = order; order += 1
         if opt._type == "toggle" then renderToggle(opt, body)
         elseif opt._type == "button" then renderButton(opt, body)
         elseif opt._type == "label" then renderLabel(opt, body)
-        -- ... other types
+        elseif opt._type == "slider" then renderSlider(opt, body)
+        elseif opt._type == "list" then renderList(opt, body)
+        elseif opt._type == "bind" then renderBind(opt, body)
         end
     end
 
     local function autoSize()
         local bh = bodyLayout.AbsoluteContentSize.Y + 11
-        card:TweenSize(folder.open and UDim2.new(1, 0, 0, HEADER + bh) or UDim2.new(1, 0, 0, HEADER), "Out", "Quint", 0.24, true)
+        card:TweenSize(
+            folder.open and UDim2.new(1, 0, 0, HEADER + bh) or UDim2.new(1, 0, 0, HEADER),
+            "Out", "Quint", 0.24, true
+        )
     end
 
     bodyLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(autoSize)
@@ -265,13 +602,10 @@ local function renderFolder(folder, parent)
             autoSize()
         end
     end)
-
-    arrowBtn.MouseEnter:Connect(function() tw(arrowBtn, { BackgroundColor3 = T.surface2 }, 0.1) end)
-    arrowBtn.MouseLeave:Connect(function() tw(arrowBtn, { BackgroundColor3 = T.surface3 }, 0.1) end)
 end
 
--- ── Window (Improved Minimize Button) ────────────────────────────────────────────────
-local WIN_W  = 255
+-- ── Window ────────────────────────────────────────────────
+local WIN_W = 255
 local TITLE_H = 42
 
 local function renderWindow(win, gui)
@@ -286,16 +620,19 @@ local function renderWindow(win, gui)
     uistroke(T.border, 1, main)
     win.main = main
 
-    local titleBar = make("Frame", { Size = UDim2.new(1, 0, 0, TITLE_H), BackgroundColor3 = T.surface, BorderSizePixel = 0 }, main)
+    local titleBar = make("Frame", {
+        Size = UDim2.new(1, 0, 0, TITLE_H),
+        BackgroundColor3 = T.surface,
+        BorderSizePixel = 0,
+    }, main)
     corner(10, titleBar)
-    make("Frame", { Position = UDim2.new(0, 0, 0.5, 0), Size = UDim2.new(1, 0, 0.5, 0), BackgroundColor3 = T.surface, BorderSizePixel = 0 }, titleBar)
+    make("Frame", { Position = UDim2.new(0, 0, 0.5, 0), Size = UDim2.new(1, 0, 0.5, 0), BackgroundColor3 = T.surface }, titleBar)
     uistroke(T.border, 1, titleBar)
 
-    local dot = make("Frame", { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 13, 0.5, 0), Size = UDim2.new(0, 8, 0, 8), BackgroundColor3 = T.accent }, titleBar)
-    corner(4, dot)
+    make("Frame", { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 13, 0.5, 0), Size = UDim2.new(0, 8, 0, 8), BackgroundColor3 = T.accent }, titleBar):AddCorner(4)
 
     make("TextLabel", {
-        Size = UDim2.new(1, -70, 1, 0),
+        Size = UDim2.new(1, -75, 1, 0),
         Position = UDim2.new(0, 28, 0, 0),
         BackgroundTransparency = 1,
         Text = win.title,
@@ -305,7 +642,7 @@ local function renderWindow(win, gui)
         TextXAlignment = Enum.TextXAlignment.Left,
     }, titleBar)
 
-    -- Modern square minimize button with arrow image
+    -- Minimize Button (Square + Image)
     local minBtn = make("TextButton", {
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -10, 0.5, 0),
@@ -318,7 +655,7 @@ local function renderWindow(win, gui)
     uistroke(T.border, 1, minBtn)
 
     local minArrow = make("ImageLabel", {
-        Size = UDim2.new(0.6, 0, 0.6, 0),
+        Size = UDim2.new(0.65, 0, 0.65, 0),
         Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
@@ -327,16 +664,25 @@ local function renderWindow(win, gui)
         Rotation = win.open and -90 or 90, -- Up when open, Down when minimized
     }, minBtn)
 
-    local content = make("Frame", { Position = UDim2.new(0, 0, 0, TITLE_H), Size = UDim2.new(1, 0, 1, -TITLE_H), BackgroundTransparency = 1 }, main)
+    local content = make("Frame", {
+        Position = UDim2.new(0, 0, 0, TITLE_H),
+        Size = UDim2.new(1, 0, 1, -TITLE_H),
+        BackgroundTransparency = 1,
+    }, main)
+
     local contentLayout = uilayout(content, 6)
     uipad(8, 8, 8, 10, content)
 
-    -- Render options...
     local order = 0
     for _, opt in ipairs(win.options) do
         opt._order = order; order += 1
         if opt._type == "folder" then renderFolder(opt, content)
-        -- ... other types
+        elseif opt._type == "toggle" then renderToggle(opt, content)
+        elseif opt._type == "button" then renderButton(opt, content)
+        elseif opt._type == "label" then renderLabel(opt, content)
+        elseif opt._type == "slider" then renderSlider(opt, content)
+        elseif opt._type == "list" then renderList(opt, content)
+        elseif opt._type == "bind" then renderBind(opt, content)
         end
     end
 
@@ -370,7 +716,64 @@ local function renderWindow(win, gui)
     minBtn.MouseLeave:Connect(function() tw(minBtn, { BackgroundColor3 = T.surface3 }, 0.1) end)
 end
 
--- (Rest of the library - API, Init, etc. - remains exactly the same)
--- ... [AddFolder, AddToggle, etc. unchanged]
+-- ══════════════════════════════════════════════════════════
+-- API
+-- ══════════════════════════════════════════════════════════
+local function injectMethods(t)
+    function t:AddFolder(title)
+        local f = { _type = "folder", title = title or "Section", options = {}, open = true }
+        injectMethods(f)
+        table.insert(t.options, f)
+        return f
+    end
+
+    function t:AddToggle(opt) opt = opt or {} opt._type = "toggle" opt.text = tostring(opt.text or "Toggle") opt.state = opt.state == true opt.flag = opt.flag or opt.text opt.callback = type(opt.callback) == "function" and opt.callback or function() end MorLib.flags[opt.flag] = opt.state table.insert(t.options, opt) return opt end
+    function t:AddButton(opt) opt = opt or {} opt._type = "button" opt.text = tostring(opt.text or "Button") opt.flag = opt.flag or opt.text opt.callback = type(opt.callback) == "function" and opt.callback or function() end table.insert(t.options, opt) return opt end
+    function t:AddLabel(opt) opt = opt or {} opt._type = "label" opt.text = tostring(opt.text or "") table.insert(t.options, opt) return opt end
+    function t:AddSlider(opt) opt = opt or {} opt._type = "slider" opt.text = tostring(opt.text or "Slider") opt.min = tonumber(opt.min) or 0 opt.max = tonumber(opt.max) or 100 opt.value = math.clamp(tonumber(opt.value) or opt.min, opt.min, opt.max) opt.float = tonumber(opt.float) or 1 opt.flag = opt.flag or opt.text opt.callback = type(opt.callback) == "function" and opt.callback or function() end MorLib.flags[opt.flag] = opt.value table.insert(t.options, opt) return opt end
+    function t:AddList(opt) opt = opt or {} opt._type = "list" opt.text = tostring(opt.text or "Dropdown") opt.values = type(opt.values) == "table" and opt.values or {} opt.value = tostring(opt.value or opt.values[1] or "") opt.flag = opt.flag or opt.text opt.callback = type(opt.callback) == "function" and opt.callback or function() end MorLib.flags[opt.flag] = opt.value table.insert(t.options, opt) return opt end
+    function t:AddBind(opt) opt = opt or {} opt._type = "bind" opt.text = tostring(opt.text or "Bind") opt.key = (opt.key and (type(opt.key) == "string" and opt.key or opt.key.Name)) or "F" opt.hold = opt.hold == true opt.flag = opt.flag or opt.text opt.callback = type(opt.callback) == "function" and opt.callback or function() end MorLib.flags[opt.flag] = opt.key table.insert(t.options, opt) return opt end
+end
+
+function MorLib:CreateWindow(title)
+    local win = { _type = "window", title = tostring(title or "Window"), options = {}, open = true, _init = false }
+    injectMethods(win)
+    table.insert(self.windows, win)
+    return win
+end
+
+function MorLib:Init()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "MorLib"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    if syn and syn.protect_gui then
+        syn.protect_gui(gui)
+        gui.Parent = game:GetService("CoreGui")
+    elseif gethui then
+        gui.Parent = gethui()
+    elseif get_hidden_gui then
+        gui.Parent = get_hidden_gui()
+    else
+        pcall(function() gui.Parent = game:GetService("CoreGui") end)
+    end
+
+    self.gui = gui
+    for _, win in ipairs(self.windows) do
+        if not win._init then
+            win._init = true
+            renderWindow(win, gui)
+        end
+    end
+    return gui
+end
+
+function MorLib:Close()
+    self.open = not self.open
+    for _, win in ipairs(self.windows) do
+        if win.main then win.main.Visible = self.open end
+    end
+end
 
 return MorLib
