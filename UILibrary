@@ -1,92 +1,143 @@
 -- ══════════════════════════════════════════════════════════
--- MorLib v1  |  By Morzeen
+-- MorLib  |  Pixel Edition  |  By Morzeen
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/MorzeenOfc/MorLib/refs/heads/main/UILibrary"))()
 -- ══════════════════════════════════════════════════════════
-local MorLib = { flags = {}, windows = {}, open = true }
+local MorLib = { flags = {}, windows = {}, open = true, _version = "2.0-pixel" }
 
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService       = game:GetService("RunService")
 
--- ── Theme ─────────────────────────────────────────────────
-local T = {
-    bg          = Color3.fromRGB(10, 10, 14),
-    surface     = Color3.fromRGB(16, 16, 22),
-    surface2    = Color3.fromRGB(22, 22, 30),
-    surface3    = Color3.fromRGB(30, 30, 42),
-    accent      = Color3.fromRGB(108, 68, 230),
-    accentLight = Color3.fromRGB(138, 98, 255),
-    text        = Color3.fromRGB(238, 232, 255),
-    textDim     = Color3.fromRGB(130, 124, 158),
-    border      = Color3.fromRGB(40, 38, 60),
-    borderLight = Color3.fromRGB(65, 60, 95),
-    red         = Color3.fromRGB(210, 55, 55),
+-- ══════════════════════════════════════════════════════════
+-- PIXEL PALETTE  (Minecraft-ish)
+-- ══════════════════════════════════════════════════════════
+local C = {
+    bg       = Color3.fromRGB(20,  20,  20),
+    panel    = Color3.fromRGB(48,  48,  48),
+    panel2   = Color3.fromRGB(62,  62,  62),
+    panel3   = Color3.fromRGB(78,  78,  78),
+    shadow   = Color3.fromRGB(10,  10,  10),
+    hilight  = Color3.fromRGB(112, 112, 112),
+    accent   = Color3.fromRGB(85,  255, 85),
+    accentD  = Color3.fromRGB(38,  120, 38),
+    text     = Color3.fromRGB(255, 255, 255),
+    textDim  = Color3.fromRGB(160, 160, 160),
+    textOff  = Color3.fromRGB(90,  90,  90),
+    red      = Color3.fromRGB(255, 85,  85),
+    yellow   = Color3.fromRGB(255, 255, 85),
 }
 
--- ── Helpers ───────────────────────────────────────────────
-local function tw(obj, props, t, style, dir)
+local PX_FONT = Enum.Font.Code   -- closest to pixel/monospace in Roblox
+local FS_LG   = 14
+local FS_MD   = 13
+local FS_SM   = 12
+
+-- ══════════════════════════════════════════════════════════
+-- ICON ASSET IDs  (no emojis)
+-- ══════════════════════════════════════════════════════════
+local ICON = {
+    check       = "rbxassetid://4921688076",
+    arrow       = "rbxassetid://4918373417",
+    close       = "rbxassetid://4921668665",
+    minus       = "rbxassetid://4917590651",
+    plus        = "rbxassetid://4917591158",
+    settings    = "rbxassetid://4893772787",
+    key         = "rbxassetid://4978530533",
+}
+
+-- ══════════════════════════════════════════════════════════
+-- CORE HELPERS
+-- ══════════════════════════════════════════════════════════
+local function make(class, props, parent)
+    local ok, inst = pcall(Instance.new, class)
+    if not ok then return nil end
+    for k, v in pairs(props or {}) do
+        pcall(function() inst[k] = v end)
+    end
+    if parent then inst.Parent = parent end
+    return inst
+end
+
+local function tw(obj, props, t)
+    if not obj or not obj.Parent then return end
     TweenService:Create(obj,
-        TweenInfo.new(t or 0.18,
-            style or Enum.EasingStyle.Quad,
-            dir   or Enum.EasingDirection.Out),
+        TweenInfo.new(t or 0.15, Enum.EasingStyle.Linear),
         props):Play()
 end
 
-local function make(class, props, parent)
-    local i = Instance.new(class)
-    for k, v in pairs(props or {}) do
-        pcall(function() i[k] = v end)
-    end
-    if parent then i.Parent = parent end
-    return i
+local function stroke(color, thick, parent)
+    return make("UIStroke", {
+        Color     = color or C.shadow,
+        Thickness = thick or 2,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    }, parent)
 end
 
-local function corner(r, parent)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, r or 6)
-    c.Parent = parent
+local function pad(l, r, t, b, parent)
+    make("UIPadding", {
+        PaddingLeft   = UDim.new(0, l or 0),
+        PaddingRight  = UDim.new(0, r or 0),
+        PaddingTop    = UDim.new(0, t or 0),
+        PaddingBottom = UDim.new(0, b or 0),
+    }, parent)
 end
 
-local function uistroke(col, th, parent)
-    local s = Instance.new("UIStroke")
-    s.Color     = col or T.border
-    s.Thickness = th  or 1
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = parent
-    return s
-end
-
-local function uipad(l, r, t, b, parent)
-    local p = Instance.new("UIPadding")
-    p.PaddingLeft   = UDim.new(0, l or 0)
-    p.PaddingRight  = UDim.new(0, r or 0)
-    p.PaddingTop    = UDim.new(0, t or 0)
-    p.PaddingBottom = UDim.new(0, b or 0)
-    p.Parent = parent
-end
-
-local function uilayout(parent, padding)
-    local l = Instance.new("UIListLayout")
-    l.SortOrder = Enum.SortOrder.LayoutOrder
-    l.Padding   = UDim.new(0, padding or 4)
-    l.Parent    = parent
+local function layout(parent, spacing)
+    local l = make("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding   = UDim.new(0, spacing or 2),
+    }, parent)
     return l
 end
 
--- ── Drag ─────────────────────────────────────────────────
-local dragObj, dragStart, dragStartPos, dragging
+-- Pixel "sunken" box (dark top/left, bright bottom/right = pressed look)
+local function pixelBox(parent, size, pos, col, zIdx)
+    local f = make("Frame", {
+        Size            = size,
+        Position        = pos,
+        BackgroundColor3 = col or C.panel2,
+        BorderSizePixel = 0,
+        ZIndex          = zIdx or 1,
+    }, parent)
+    -- top highlight
+    make("Frame", { Size = UDim2.new(1,0,0,2), BackgroundColor3 = C.hilight,
+        BorderSizePixel = 0, ZIndex = f.ZIndex+1 }, f)
+    -- left highlight
+    make("Frame", { Size = UDim2.new(0,2,1,0), BackgroundColor3 = C.hilight,
+        BorderSizePixel = 0, ZIndex = f.ZIndex+1 }, f)
+    -- bottom shadow
+    make("Frame", { AnchorPoint = Vector2.new(0,1), Position = UDim2.new(0,0,1,0),
+        Size = UDim2.new(1,0,0,2), BackgroundColor3 = C.shadow,
+        BorderSizePixel = 0, ZIndex = f.ZIndex+1 }, f)
+    -- right shadow
+    make("Frame", { AnchorPoint = Vector2.new(1,0), Position = UDim2.new(1,0,0,0),
+        Size = UDim2.new(0,2,1,0), BackgroundColor3 = C.shadow,
+        BorderSizePixel = 0, ZIndex = f.ZIndex+1 }, f)
+    return f
+end
+
+-- ── Drag system ───────────────────────────────────────────
+local _drag = { on = false }
 
 UserInputService.InputChanged:Connect(function(i)
-    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-        local d = i.Position - dragStart
-        dragObj.Position = UDim2.new(
-            dragStartPos.X.Scale, dragStartPos.X.Offset + d.X,
-            dragStartPos.Y.Scale, math.max(-38, dragStartPos.Y.Offset + d.Y)
+    if not _drag.on then return end
+    if i.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+    local d = i.Position - _drag.start
+    _drag.obj.Position = UDim2.new(
+        _drag.spos.X.Scale, _drag.spos.X.Offset + d.X,
+        _drag.spos.Y.Scale, math.max(0, _drag.spos.Y.Offset + d.Y)
+    )
+    -- sync shadow
+    if _drag.shadow then
+        _drag.shadow.Position = UDim2.new(
+            _drag.obj.Position.X.Scale, _drag.obj.Position.X.Offset + 4,
+            _drag.obj.Position.Y.Scale, _drag.obj.Position.Y.Offset + 4
         )
     end
 end)
 UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        _drag.on = false
     end
 end)
 
@@ -94,421 +145,498 @@ end)
 -- ELEMENT RENDERERS
 -- ══════════════════════════════════════════════════════════
 
--- ── Toggle ────────────────────────────────────────────────
-local function renderToggle(opt, parent)
-    local row = make("Frame", {
-        Size = UDim2.new(1, 0, 0, 34),
-        BackgroundTransparency = 1,
-        LayoutOrder = opt._order or 0,
-    }, parent)
-
-    make("TextLabel", {
-        Size = UDim2.new(1, -56, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = opt.text,
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
-        TextColor3 = T.text,
-        TextXAlignment = Enum.TextXAlignment.Left,
-    }, row)
-
-    local track = make("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -10, 0.5, 0),
-        Size = UDim2.new(0, 38, 0, 21),
-        BackgroundColor3 = opt.state and T.accent or T.surface3,
-    }, row)
-    corner(11, track)
-    uistroke(T.border, 1, track)
-
-    local thumb = make("Frame", {
-        AnchorPoint = Vector2.new(0, 0.5),
-        Position = opt.state
-            and UDim2.new(0, 19, 0.5, 0)
-            or  UDim2.new(0,  2, 0.5, 0),
-        Size = UDim2.new(0, 17, 0, 17),
-        BackgroundColor3 = Color3.new(1, 1, 1),
-    }, track)
-    corner(9, thumb)
-
-    local function setState(v)
-        opt.state = v
-        MorLib.flags[opt.flag] = v
-        tw(track, { BackgroundColor3 = v and T.accent or T.surface3 }, 0.18)
-        tw(thumb, { Position = v and UDim2.new(0, 19, 0.5, 0) or UDim2.new(0, 2, 0.5, 0) }, 0.18)
-        pcall(opt.callback, v)
-    end
-
-    function opt:SetState(v) setState(v) end
-
-    local textLbl = row:FindFirstChildOfClass("TextLabel")
-    row.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            setState(not opt.state)
-        end
-    end)
-    row.MouseEnter:Connect(function() tw(textLbl, { TextColor3 = T.accentLight }, 0.1) end)
-    row.MouseLeave:Connect(function() tw(textLbl, { TextColor3 = T.text }, 0.1) end)
-end
-
--- ── Button ────────────────────────────────────────────────
-local function renderButton(opt, parent)
-    local row = make("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
-        BackgroundTransparency = 1,
-        LayoutOrder = opt._order or 0,
-    }, parent)
-
-    local btn = make("TextButton", {
-        Size = UDim2.new(1, -16, 1, -8),
-        Position = UDim2.new(0, 8, 0, 4),
-        BackgroundColor3 = T.surface3,
-        Text = opt.text,
-        TextSize = 14,
-        Font = Enum.Font.GothamSemibold,
-        TextColor3 = T.text,
-        AutoButtonColor = false,
-    }, row)
-    corner(7, btn)
-    uistroke(T.border, 1, btn)
-
-    btn.MouseButton1Down:Connect(function()
-        tw(btn, { BackgroundColor3 = T.accent }, 0.1)
-    end)
-    btn.MouseButton1Up:Connect(function()
-        tw(btn, { BackgroundColor3 = T.surface3 }, 0.18)
-        task.spawn(pcall, opt.callback)
-    end)
-    btn.MouseEnter:Connect(function()
-        tw(btn, { BackgroundColor3 = T.surface2 + Color3.fromRGB(12,12,14) }, 0.1)
-        uistroke(T.borderLight, 1, btn)
-    end)
-    btn.MouseLeave:Connect(function()
-        tw(btn, { BackgroundColor3 = T.surface3 }, 0.1)
-    end)
-end
-
 -- ── Label ─────────────────────────────────────────────────
 local function renderLabel(opt, parent)
-    local lbl = make("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 24),
+    local row = make("Frame", {
+        Size = UDim2.new(1,0,0,20),
         BackgroundTransparency = 1,
-        Text = "  " .. opt.text,
-        TextSize = 13,
-        Font = Enum.Font.Gotham,
-        TextColor3 = T.textDim,
-        TextXAlignment = Enum.TextXAlignment.Left,
         LayoutOrder = opt._order or 0,
     }, parent)
 
-    -- Support both label.Text = x  and  label:SetText(x)
+    local lbl = make("TextLabel", {
+        Size = UDim2.new(1,-8,1,0),
+        Position = UDim2.new(0,4,0,0),
+        BackgroundTransparency = 1,
+        Text = ">> " .. string.upper(tostring(opt.text or "")),
+        TextSize = FS_SM,
+        Font = PX_FONT,
+        TextColor3 = C.textDim,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, row)
+
     function opt:SetText(v)
-        lbl.Text = "  " .. tostring(v)
+        lbl.Text = ">> " .. string.upper(tostring(v))
     end
     setmetatable(opt, {
         __newindex = function(t, k, v)
-            if k == "Text" then lbl.Text = "  " .. tostring(v) end
+            if k == "Text" then
+                lbl.Text = ">> " .. string.upper(tostring(v))
+            end
             rawset(t, k, v)
         end,
     })
 end
 
--- ── Slider ────────────────────────────────────────────────
-local function renderSlider(opt, parent)
-    local TRACK = 4
-
-    local wrapper = make("Frame", {
-        Size = UDim2.new(1, 0, 0, 54),
+-- ── Toggle ────────────────────────────────────────────────
+local function renderToggle(opt, parent)
+    local H = 30
+    local row = make("Frame", {
+        Size = UDim2.new(1,0,0,H),
         BackgroundTransparency = 1,
         LayoutOrder = opt._order or 0,
     }, parent)
 
-    make("TextLabel", {
-        Size = UDim2.new(1, -64, 0, 22),
-        Position = UDim2.new(0, 10, 0, 4),
+    local bg = make("Frame", {
+        Size = UDim2.new(1,-4,1,-4),
+        Position = UDim2.new(0,2,0,2),
+        BackgroundColor3 = opt.state and C.accentD or C.panel2,
+        BorderSizePixel = 0,
+    }, row)
+    stroke(C.shadow, 2, bg)
+
+    local nameLbl = make("TextLabel", {
+        Size = UDim2.new(1,-40,1,0),
+        Position = UDim2.new(0,6,0,0),
         BackgroundTransparency = 1,
-        Text = opt.text,
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
-        TextColor3 = T.text,
+        Text = string.upper(tostring(opt.text or "TOGGLE")),
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = opt.state and C.accent or C.text,
         TextXAlignment = Enum.TextXAlignment.Left,
-    }, wrapper)
+        ZIndex = bg.ZIndex + 1,
+    }, bg)
+
+    -- Pixel checkbox
+    local box = make("Frame", {
+        AnchorPoint = Vector2.new(1,0.5),
+        Position = UDim2.new(1,-5,0.5,0),
+        Size = UDim2.new(0,22,0,22),
+        BackgroundColor3 = opt.state and C.accent or C.panel,
+        BorderSizePixel = 0,
+        ZIndex = bg.ZIndex + 1,
+    }, bg)
+    stroke(C.shadow, 2, box)
+
+    local checkImg = make("ImageLabel", {
+        AnchorPoint = Vector2.new(0.5,0.5),
+        Position = UDim2.new(0.5,0,0.5,0),
+        Size = UDim2.new(0,14,0,14),
+        BackgroundTransparency = 1,
+        Image = ICON.check,
+        ImageColor3 = C.shadow,
+        Visible = opt.state,
+        ZIndex = box.ZIndex + 1,
+    }, box)
+
+    local debounce = false
+    local function setState(v)
+        if debounce then return end
+        debounce = true
+        opt.state = v
+        MorLib.flags[opt.flag] = v
+        bg.BackgroundColor3    = v and C.accentD or C.panel2
+        nameLbl.TextColor3     = v and C.accent  or C.text
+        box.BackgroundColor3   = v and C.accent  or C.panel
+        checkImg.Visible       = v
+        task.spawn(pcall, opt.callback, v)
+        task.wait(0.06)
+        debounce = false
+    end
+
+    function opt:SetState(v) setState(v) end
+
+    bg.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            setState(not opt.state)
+        end
+    end)
+    bg.MouseEnter:Connect(function()
+        if not opt.state then bg.BackgroundColor3 = C.panel3 end
+    end)
+    bg.MouseLeave:Connect(function()
+        if not opt.state then bg.BackgroundColor3 = C.panel2 end
+    end)
+end
+
+-- ── Button ────────────────────────────────────────────────
+local function renderButton(opt, parent)
+    local H = 32
+    local row = make("Frame", {
+        Size = UDim2.new(1,0,0,H),
+        BackgroundTransparency = 1,
+        LayoutOrder = opt._order or 0,
+    }, parent)
+
+    local btn = make("TextButton", {
+        Size = UDim2.new(1,-4,1,-4),
+        Position = UDim2.new(0,2,0,2),
+        BackgroundColor3 = C.panel2,
+        Text = "[ " .. string.upper(tostring(opt.text or "BUTTON")) .. " ]",
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = C.text,
+        AutoButtonColor = false,
+        BorderSizePixel = 0,
+    }, row)
+    stroke(C.shadow, 2, btn)
+
+    -- Pixel top/left highlight lines
+    make("Frame", { Size = UDim2.new(1,0,0,2), BackgroundColor3 = C.hilight,
+        BorderSizePixel = 0, ZIndex = btn.ZIndex+1 }, btn)
+    make("Frame", { Size = UDim2.new(0,2,1,0), BackgroundColor3 = C.hilight,
+        BorderSizePixel = 0, ZIndex = btn.ZIndex+1 }, btn)
+
+    btn.MouseButton1Down:Connect(function()
+        btn.BackgroundColor3 = C.accentD
+        btn.TextColor3 = C.accent
+    end)
+    btn.MouseButton1Up:Connect(function()
+        btn.BackgroundColor3 = C.panel2
+        btn.TextColor3 = C.text
+        task.spawn(pcall, opt.callback)
+    end)
+    btn.MouseEnter:Connect(function()
+        if btn.BackgroundColor3 ~= C.accentD then
+            btn.BackgroundColor3 = C.panel3
+        end
+    end)
+    btn.MouseLeave:Connect(function()
+        if btn.BackgroundColor3 ~= C.accentD then
+            btn.BackgroundColor3 = C.panel2
+            btn.TextColor3 = C.text
+        end
+    end)
+end
+
+-- ── Slider ────────────────────────────────────────────────
+local function renderSlider(opt, parent)
+    local H = 50
+    local row = make("Frame", {
+        Size = UDim2.new(1,0,0,H),
+        BackgroundColor3 = C.panel2,
+        BorderSizePixel = 0,
+        LayoutOrder = opt._order or 0,
+    }, parent)
+    stroke(C.shadow, 2, row)
+
+    make("TextLabel", {
+        Size = UDim2.new(0.65,0,0,20),
+        Position = UDim2.new(0,6,0,4),
+        BackgroundTransparency = 1,
+        Text = string.upper(tostring(opt.text or "SLIDER")),
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = C.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, row)
 
     local valLbl = make("TextLabel", {
-        Size = UDim2.new(0, 54, 0, 22),
-        Position = UDim2.new(1, -64, 0, 4),
+        Size = UDim2.new(0.35,-6,0,20),
+        Position = UDim2.new(0.65,0,0,4),
         BackgroundTransparency = 1,
         Text = tostring(opt.value),
-        TextSize = 13,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.accent,
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = C.accent,
         TextXAlignment = Enum.TextXAlignment.Right,
-    }, wrapper)
+    }, row)
 
+    local TRACK_H = 10
     local trackBg = make("Frame", {
-        Size = UDim2.new(1, -20, 0, TRACK),
-        Position = UDim2.new(0, 10, 0, 38),
-        BackgroundColor3 = T.surface3,
-    }, wrapper)
-    corner(TRACK, trackBg)
+        Size = UDim2.new(1,-12,0,TRACK_H),
+        Position = UDim2.new(0,6,0,32),
+        BackgroundColor3 = C.panel,
+        BorderSizePixel = 0,
+    }, row)
+    stroke(C.shadow, 2, trackBg)
 
-    local pct0 = (opt.value - opt.min) / (opt.max - opt.min)
-    local fill = make("Frame", { Size = UDim2.new(pct0, 0, 1, 0), BackgroundColor3 = T.accent }, trackBg)
-    corner(TRACK, fill)
+    local pct0 = math.clamp((opt.value - opt.min) / math.max(1, opt.max - opt.min), 0, 1)
 
-    local TS = 14
-    local thumb = make("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(pct0, 0, 0.5, 0),
-        Size = UDim2.new(0, TS, 0, TS),
-        BackgroundColor3 = Color3.new(1, 1, 1),
-        ZIndex = 2,
+    local fill = make("Frame", {
+        Size = UDim2.new(pct0,0,1,0),
+        BackgroundColor3 = C.accent,
+        BorderSizePixel = 0,
+        ZIndex = trackBg.ZIndex + 1,
     }, trackBg)
-    corner(TS / 2, thumb)
+
+    local THUMB_W, THUMB_H = 8, 16
+    local thumb = make("Frame", {
+        AnchorPoint = Vector2.new(0.5,0.5),
+        Position = UDim2.new(pct0,0,0.5,0),
+        Size = UDim2.new(0,THUMB_W,0,THUMB_H),
+        BackgroundColor3 = Color3.fromRGB(220,220,220),
+        BorderSizePixel = 0,
+        ZIndex = trackBg.ZIndex + 2,
+    }, trackBg)
+    stroke(C.shadow, 2, thumb)
 
     local sliding = false
+    local float = opt.float or 1
 
     local function setValue(v)
-        local r = math.floor(v / opt.float + 0.5) * opt.float
+        local r = math.floor(v / float + 0.5) * float
         r = math.clamp(r, opt.min, opt.max)
         opt.value = r
         MorLib.flags[opt.flag] = r
-        local p = (r - opt.min) / (opt.max - opt.min)
-        fill.Size          = UDim2.new(p, 0, 1, 0)
-        thumb.Position     = UDim2.new(p, 0, 0.5, 0)
-        valLbl.Text        = tostring(r)
-        pcall(opt.callback, r)
+        local p = math.clamp((r - opt.min) / math.max(1, opt.max - opt.min), 0, 1)
+        fill.Size      = UDim2.new(p,0,1,0)
+        thumb.Position = UDim2.new(p,0,0.5,0)
+        valLbl.Text    = tostring(r)
+        task.spawn(pcall, opt.callback, r)
     end
-
     function opt:SetValue(v) setValue(v) end
 
-    local function fromMouse(x)
-        local p = math.clamp((x - trackBg.AbsolutePosition.X) / trackBg.AbsoluteSize.X, 0, 1)
+    local function fromX(x)
+        local p = math.clamp(
+            (x - trackBg.AbsolutePosition.X) / math.max(1, trackBg.AbsoluteSize.X),
+            0, 1)
         setValue(opt.min + p * (opt.max - opt.min))
     end
 
     trackBg.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             sliding = true
-            tw(thumb, { Size = UDim2.new(0, TS + 4, 0, TS + 4), BackgroundColor3 = T.accentLight }, 0.12)
-            fromMouse(i.Position.X)
+            thumb.BackgroundColor3 = C.accent
+            fromX(i.Position.X)
         end
     end)
     UserInputService.InputChanged:Connect(function(i)
         if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then
-            fromMouse(i.Position.X)
+            fromX(i.Position.X)
         end
     end)
     UserInputService.InputEnded:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 and sliding then
             sliding = false
-            tw(thumb, { Size = UDim2.new(0, TS, 0, TS), BackgroundColor3 = Color3.new(1,1,1) }, 0.12)
+            thumb.BackgroundColor3 = Color3.fromRGB(220,220,220)
         end
     end)
 end
 
 -- ── Dropdown ──────────────────────────────────────────────
 local function renderList(opt, parent)
-    local ROW_H = 54
+    local BASE_H = 36
 
     local wrapper = make("Frame", {
-        Size = UDim2.new(1, 0, 0, ROW_H),
-        BackgroundTransparency = 1,
-        LayoutOrder = opt._order or 0,
+        Size = UDim2.new(1,0,0,BASE_H),
+        BackgroundColor3 = C.panel2,
+        BorderSizePixel = 0,
         ClipsDescendants = false,
+        LayoutOrder = opt._order or 0,
     }, parent)
+    stroke(C.shadow, 2, wrapper)
 
-    local box = make("Frame", {
-        Size = UDim2.new(1, -16, 0, ROW_H - 10),
-        Position = UDim2.new(0, 8, 0, 5),
-        BackgroundColor3 = T.surface3,
+    local header = make("Frame", {
+        Size = UDim2.new(1,0,0,BASE_H),
+        BackgroundTransparency = 1,
+        ZIndex = wrapper.ZIndex + 1,
     }, wrapper)
-    corner(7, box)
-    uistroke(T.border, 1, box)
 
-    make("TextLabel", {
-        Size = UDim2.new(1, -30, 0, 16),
-        Position = UDim2.new(0, 10, 0, 6),
+    local headerLbl = make("TextLabel", {
+        Size = UDim2.new(1,-30,1,0),
+        Position = UDim2.new(0,6,0,0),
         BackgroundTransparency = 1,
-        Text = opt.text,
-        TextSize = 12,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.textDim,
+        Text = string.upper(tostring(opt.text)) .. ": " .. string.upper(tostring(opt.value)),
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = C.text,
         TextXAlignment = Enum.TextXAlignment.Left,
-    }, box)
+        ZIndex = header.ZIndex,
+    }, header)
 
-    local valLbl = make("TextLabel", {
-        Size = UDim2.new(1, -30, 0, 20),
-        Position = UDim2.new(0, 10, 0, 22),
+    local arrowImg = make("ImageLabel", {
+        AnchorPoint = Vector2.new(1,0.5),
+        Position = UDim2.new(1,-6,0.5,0),
+        Size = UDim2.new(0,16,0,16),
         BackgroundTransparency = 1,
-        Text = opt.value,
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
-        TextColor3 = T.text,
-        TextXAlignment = Enum.TextXAlignment.Left,
-    }, box)
+        Image = ICON.arrow,
+        ImageColor3 = C.textDim,
+        Rotation = 0,
+        ZIndex = header.ZIndex,
+    }, header)
 
-    local arrow = make("TextLabel", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -10, 0.5, 0),
-        Size = UDim2.new(0, 20, 0, 20),
-        BackgroundTransparency = 1,
-        Text = "▾",
-        TextSize = 14,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.textDim,
-    }, box)
-
-    -- Inline expand
     local popup = make("Frame", {
-        Position = UDim2.new(0, 8, 1, 2),
-        Size = UDim2.new(1, -16, 0, 0),
-        BackgroundColor3 = T.surface2,
+        Position = UDim2.new(0,0,1,2),
+        Size = UDim2.new(1,0,0,0),
+        BackgroundColor3 = C.panel,
+        BorderSizePixel = 0,
         ClipsDescendants = true,
-        ZIndex = 5,
+        ZIndex = 20,
         Visible = false,
     }, wrapper)
-    corner(7, popup)
-    uistroke(T.borderLight, 1, popup)
+    stroke(C.shadow, 2, popup)
 
-    local popLayout = uilayout(popup, 2)
-    uipad(4, 4, 4, 4, popup)
+    local popLayout = layout(popup, 1)
+    pad(2,2,2,2,popup)
 
     opt._open = false
 
     local function closeList()
         opt._open = false
-        arrow.Text = "▾"
-        tw(popup, { Size = UDim2.new(1, -16, 0, 0) }, 0.18)
-        task.delay(0.2, function()
+        arrowImg.Rotation = 0
+        tw(wrapper, { Size = UDim2.new(1,0,0,BASE_H) }, 0.15)
+        tw(popup, { Size = UDim2.new(1,0,0,0) }, 0.15)
+        task.delay(0.16, function()
             if not opt._open then popup.Visible = false end
         end)
-        -- Reset wrapper size
-        tw(wrapper, { Size = UDim2.new(1, 0, 0, ROW_H) }, 0.18)
     end
 
     local function openList()
         opt._open = true
-        arrow.Text = "▴"
+        arrowImg.Rotation = 180
         popup.Visible = true
-        local count   = math.min(#opt.values, 5)
-        local popH    = count * 32 + 8
-        tw(popup, { Size = UDim2.new(1, -16, 0, popH) }, 0.2, Enum.EasingStyle.Back)
-        tw(wrapper, { Size = UDim2.new(1, 0, 0, ROW_H + popH + 4) }, 0.2, Enum.EasingStyle.Back)
+        local count = math.min(#opt.values, 5)
+        local popH  = count * 28 + 4
+        tw(popup,   { Size = UDim2.new(1,0,0,popH) }, 0.15)
+        tw(wrapper, { Size = UDim2.new(1,0,0,BASE_H + popH + 4) }, 0.15)
     end
 
     local function addValue(value)
         local item = make("TextButton", {
-            Size = UDim2.new(1, 0, 0, 30),
-            BackgroundColor3 = T.surface3,
-            Text = tostring(value),
-            TextSize = 13,
-            Font = Enum.Font.Gotham,
-            TextColor3 = T.text,
+            Size = UDim2.new(1,0,0,26),
+            BackgroundColor3 = C.panel2,
+            Text = "> " .. string.upper(tostring(value)),
+            TextSize = FS_SM,
+            Font = PX_FONT,
+            TextColor3 = C.text,
             AutoButtonColor = false,
-            ZIndex = 5,
+            BorderSizePixel = 0,
+            ZIndex = 21,
         }, popup)
-        corner(5, item)
-
         item.MouseButton1Click:Connect(function()
             opt.value = tostring(value)
             MorLib.flags[opt.flag] = opt.value
-            valLbl.Text = opt.value
-            pcall(opt.callback, value)
+            headerLbl.Text = string.upper(tostring(opt.text)) .. ": " .. string.upper(tostring(value))
+            task.spawn(pcall, opt.callback, value)
             closeList()
         end)
-        item.MouseEnter:Connect(function() tw(item, { BackgroundColor3 = T.accent }, 0.1) end)
-        item.MouseLeave:Connect(function() tw(item, { BackgroundColor3 = T.surface3 }, 0.1) end)
+        item.MouseEnter:Connect(function()
+            item.BackgroundColor3 = C.accentD
+            item.TextColor3 = C.accent
+        end)
+        item.MouseLeave:Connect(function()
+            item.BackgroundColor3 = C.panel2
+            item.TextColor3 = C.text
+        end)
     end
 
-    for _, v in ipairs(opt.values) do addValue(tostring(v)) end
+    for _, v in ipairs(opt.values or {}) do addValue(tostring(v)) end
 
     function opt:AddValue(v) addValue(tostring(v)) end
     function opt:SetValue(v)
         self.value = tostring(v)
         MorLib.flags[self.flag] = self.value
-        valLbl.Text = self.value
-        pcall(self.callback, v)
+        headerLbl.Text = string.upper(tostring(self.text)) .. ": " .. string.upper(tostring(v))
+        task.spawn(pcall, self.callback, v)
     end
     function opt:Close() closeList() end
 
-    box.InputBegan:Connect(function(i)
+    header.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             if opt._open then closeList() else openList() end
         end
     end)
-    box.MouseEnter:Connect(function() uistroke(T.borderLight, 1, box) end)
-    box.MouseLeave:Connect(function() uistroke(T.border, 1, box) end)
+    header.MouseEnter:Connect(function() wrapper.BackgroundColor3 = C.panel3 end)
+    header.MouseLeave:Connect(function() wrapper.BackgroundColor3 = C.panel2 end)
 end
 
 -- ── Bind ──────────────────────────────────────────────────
 local BIND_BLACKLIST = {
     Enum.KeyCode.Unknown, Enum.KeyCode.Return, Enum.KeyCode.Escape,
-    Enum.KeyCode.Tab, Enum.KeyCode.Backspace, Enum.KeyCode.Delete,
-    Enum.KeyCode.CapsLock,
+    Enum.KeyCode.Tab, Enum.KeyCode.Backspace, Enum.KeyCode.Delete, Enum.KeyCode.CapsLock,
 }
 
 local function renderBind(opt, parent)
+    local H = 30
     local row = make("Frame", {
-        Size = UDim2.new(1, 0, 0, 34),
+        Size = UDim2.new(1,0,0,H),
         BackgroundTransparency = 1,
         LayoutOrder = opt._order or 0,
     }, parent)
 
-    make("TextLabel", {
-        Size = UDim2.new(0.6, 0, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = opt.text,
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
-        TextColor3 = T.text,
-        TextXAlignment = Enum.TextXAlignment.Left,
+    local bg = make("Frame", {
+        Size = UDim2.new(1,-4,1,-4),
+        Position = UDim2.new(0,2,0,2),
+        BackgroundColor3 = C.panel2,
+        BorderSizePixel = 0,
     }, row)
+    stroke(C.shadow, 2, bg)
 
-    local keyBtn = make("TextButton", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -10, 0.5, 0),
-        Size = UDim2.new(0, 58, 0, 22),
-        BackgroundColor3 = T.surface3,
-        Text = opt.key,
-        TextSize = 12,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.text,
-        AutoButtonColor = false,
-    }, row)
-    corner(5, keyBtn)
-    uistroke(T.border, 1, keyBtn)
+    -- Key icon
+    make("ImageLabel", {
+        AnchorPoint = Vector2.new(0,0.5),
+        Position = UDim2.new(0,5,0.5,0),
+        Size = UDim2.new(0,14,0,14),
+        BackgroundTransparency = 1,
+        Image = ICON.key,
+        ImageColor3 = C.textDim,
+        ZIndex = bg.ZIndex + 1,
+    }, bg)
+
+    make("TextLabel", {
+        Size = UDim2.new(0.55,0,1,0),
+        Position = UDim2.new(0,22,0,0),
+        BackgroundTransparency = 1,
+        Text = string.upper(tostring(opt.text or "BIND")),
+        TextSize = FS_MD,
+        Font = PX_FONT,
+        TextColor3 = C.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = bg.ZIndex + 1,
+    }, bg)
+
+    local keyBox = make("Frame", {
+        AnchorPoint = Vector2.new(1,0.5),
+        Position = UDim2.new(1,-4,0.5,0),
+        Size = UDim2.new(0,62,0,20),
+        BackgroundColor3 = C.panel,
+        BorderSizePixel = 0,
+        ZIndex = bg.ZIndex + 1,
+    }, bg)
+    stroke(C.shadow, 2, keyBox)
+
+    local keyLbl = make("TextLabel", {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Text = tostring(opt.key or "F"),
+        TextSize = FS_SM,
+        Font = PX_FONT,
+        TextColor3 = C.accent,
+        ZIndex = keyBox.ZIndex + 1,
+    }, keyBox)
 
     local binding = false
     local loop
 
     local function setKey(key)
         binding = false
-        opt.key = type(key) == "string" and key or key.Name
-        MorLib.flags[opt.flag] = opt.key
-        keyBtn.Text = opt.key
-        tw(keyBtn, { BackgroundColor3 = T.surface3 }, 0.15)
+        local name = type(key) == "string" and key or (key.Name or "F")
+        opt.key = name
+        MorLib.flags[opt.flag] = name
+        keyLbl.Text = name
+        keyBox.BackgroundColor3 = C.panel
+        keyLbl.TextColor3 = C.accent
     end
     function opt:SetKey(k) setKey(k) end
 
-    keyBtn.MouseButton1Click:Connect(function()
-        if binding then return end
-        binding = true
-        keyBtn.Text = "..."
-        tw(keyBtn, { BackgroundColor3 = T.accent }, 0.15)
+    keyBox.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            if binding then return end
+            binding = true
+            keyLbl.Text = "..."
+            keyBox.BackgroundColor3 = C.accentD
+            keyLbl.TextColor3 = C.shadow
+        end
     end)
 
     UserInputService.InputBegan:Connect(function(i)
         if UserInputService:GetFocusedTextBox() then return end
         if binding then
             if i.KeyCode == Enum.KeyCode.Escape then setKey(opt.key); return end
-            local blocked = false
             for _, k in ipairs(BIND_BLACKLIST) do
-                if k == i.KeyCode then blocked = true; break end
+                if k == i.KeyCode then return end
             end
-            if not blocked then setKey(i.KeyCode) end
+            setKey(i.KeyCode)
             return
         end
         if i.KeyCode.Name == opt.key or i.UserInputType.Name == opt.key then
@@ -525,324 +653,428 @@ local function renderBind(opt, parent)
         end
     end)
 
-    keyBtn.MouseEnter:Connect(function() tw(keyBtn, { BackgroundColor3 = T.surface2 }, 0.1) end)
-    keyBtn.MouseLeave:Connect(function() tw(keyBtn, { BackgroundColor3 = T.surface3 }, 0.1) end)
-end
-
--- ══════════════════════════════════════════════════════════
--- FOLDER
--- ══════════════════════════════════════════════════════════
-local function renderFolder(folder, parent)
-    local HEADER = 34
-
-    local card = make("Frame", {
-        Size = UDim2.new(1, 0, 0, HEADER),
-        BackgroundColor3 = T.surface,
-        ClipsDescendants = true,
-        LayoutOrder = folder._order or 0,
-    }, parent)
-    corner(8, card)
-    uistroke(T.border, 1, card)
-
-    -- Header
-    local header = make("Frame", {
-        Size = UDim2.new(1, 0, 0, HEADER),
-        BackgroundTransparency = 1,
-    }, card)
-
-    -- Accent left bar
-    local accentBar = make("Frame", {
-        Size = UDim2.new(0, 3, 0, 16),
-        Position = UDim2.new(0, 8, 0.5, -8),
-        BackgroundColor3 = T.accent,
-    }, header)
-    corner(2, accentBar)
-
-    make("TextLabel", {
-        Size = UDim2.new(1, -36, 1, 0),
-        Position = UDim2.new(0, 18, 0, 0),
-        BackgroundTransparency = 1,
-        Text = folder.title,
-        TextSize = 13,
-        Font = Enum.Font.GothamSemibold,
-        TextColor3 = T.textDim,
-        TextXAlignment = Enum.TextXAlignment.Left,
-    }, header)
-
-    local arrowLbl = make("TextLabel", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -12, 0.5, 0),
-        Size = UDim2.new(0, 18, 0, 18),
-        BackgroundTransparency = 1,
-        Text = folder.open and "▴" or "▾",
-        TextSize = 12,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.textDim,
-    }, header)
-
-    -- Body
-    local body = make("Frame", {
-        Position = UDim2.new(0, 0, 0, HEADER),
-        Size = UDim2.new(1, 0, 0, 0),
-        BackgroundTransparency = 1,
-    }, card)
-
-    local bodyLayout = uilayout(body, 3)
-    uipad(8, 8, 5, 6, body)
-
-    -- Render children
-    local order = 0
-    for _, opt in ipairs(folder.options) do
-        opt._order = order; order += 1
-        if opt._type == "toggle"  then renderToggle(opt, body)
-        elseif opt._type == "button"  then renderButton(opt, body)
-        elseif opt._type == "label"   then renderLabel(opt, body)
-        elseif opt._type == "slider"  then renderSlider(opt, body)
-        elseif opt._type == "list"    then renderList(opt, body)
-        elseif opt._type == "bind"    then renderBind(opt, body)
-        end
-    end
-
-    local function autoSize()
-        local bh = bodyLayout.AbsoluteContentSize.Y + 11
-        card:TweenSize(
-            folder.open
-                and UDim2.new(1, 0, 0, HEADER + bh)
-                or  UDim2.new(1, 0, 0, HEADER),
-            "Out", "Quint", 0.24, true
-        )
-    end
-
-    bodyLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(autoSize)
-    task.defer(autoSize)
-
-    header.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            folder.open = not folder.open
-            arrowLbl.Text = folder.open and "▴" or "▾"
-            tw(accentBar, { BackgroundColor3 = folder.open and T.accent or T.textDim }, 0.2)
-            autoSize()
-        end
+    keyBox.MouseEnter:Connect(function()
+        if not binding then keyBox.BackgroundColor3 = C.panel3 end
+    end)
+    keyBox.MouseLeave:Connect(function()
+        if not binding then keyBox.BackgroundColor3 = C.panel end
     end)
 end
 
 -- ══════════════════════════════════════════════════════════
--- WINDOW
+-- FOLDER RENDERER
 -- ══════════════════════════════════════════════════════════
-local WIN_W  = 255
-local TITLE_H = 42
+local FOLDER_H = 32
 
-local function renderWindow(win, gui)
-    local main = make("Frame", {
-        Size = UDim2.new(0, WIN_W, 0, TITLE_H),
-        Position = UDim2.new(0.5, -(WIN_W/2), 0, 60),
-        BackgroundColor3 = T.bg,
-        ClipsDescendants = true,
+local function renderFolder(folder, parent)
+    local card = make("Frame", {
+        Size = UDim2.new(1,0,0,FOLDER_H),
+        BackgroundColor3 = C.panel,
         BorderSizePixel = 0,
-    }, gui)
-    corner(10, main)
-    uistroke(T.border, 1, main)
-    win.main = main
+        ClipsDescendants = true,   -- ← hides body content when collapsed
+        LayoutOrder = folder._order or 0,
+    }, parent)
+    stroke(C.hilight, 2, card)
 
-    -- Title bar
-    local titleBar = make("Frame", {
-        Size = UDim2.new(1, 0, 0, TITLE_H),
-        BackgroundColor3 = T.surface,
+    -- Header (always visible)
+    local header = make("Frame", {
+        Size = UDim2.new(1,0,0,FOLDER_H),
+        BackgroundColor3 = C.panel2,
         BorderSizePixel = 0,
-    }, main)
-    corner(10, titleBar)
-    -- Patch bottom corners
+        ZIndex = card.ZIndex + 1,
+    }, card)
+
+    -- Left accent bar (3px pixel strip)
     make("Frame", {
-        Position = UDim2.new(0, 0, 0.5, 0),
-        Size = UDim2.new(1, 0, 0.5, 0),
-        BackgroundColor3 = T.surface,
+        Size = UDim2.new(0,4,0,FOLDER_H),
+        BackgroundColor3 = C.accent,
         BorderSizePixel = 0,
-    }, titleBar)
-    uistroke(T.border, 1, titleBar)
-
-    -- Accent dot
-    local dot = make("Frame", {
-        AnchorPoint = Vector2.new(0, 0.5),
-        Position = UDim2.new(0, 13, 0.5, 0),
-        Size = UDim2.new(0, 8, 0, 8),
-        BackgroundColor3 = T.accent,
-    }, titleBar)
-    corner(4, dot)
+        ZIndex = header.ZIndex + 1,
+    }, header)
 
     make("TextLabel", {
-        Size = UDim2.new(1, -60, 1, 0),
-        Position = UDim2.new(0, 28, 0, 0),
+        Size = UDim2.new(1,-36,1,0),
+        Position = UDim2.new(0,10,0,0),
         BackgroundTransparency = 1,
-        Text = win.title,
-        TextSize = 14,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.text,
+        Text = "[ " .. string.upper(tostring(folder.title or "SECTION")) .. " ]",
+        TextSize = FS_LG,
+        Font = PX_FONT,
+        TextColor3 = C.accent,
         TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = header.ZIndex + 1,
+    }, header)
+
+    local arrowImg = make("ImageLabel", {
+        AnchorPoint = Vector2.new(1,0.5),
+        Position = UDim2.new(1,-6,0.5,0),
+        Size = UDim2.new(0,16,0,16),
+        BackgroundTransparency = 1,
+        Image = ICON.arrow,
+        ImageColor3 = C.textDim,
+        Rotation = folder.open and 180 or 0,
+        ZIndex = header.ZIndex + 1,
+    }, header)
+
+    -- Body (content lives here, hidden via ClipsDescendants when collapsed)
+    local body = make("Frame", {
+        Position = UDim2.new(0,0,0,FOLDER_H),
+        Size = UDim2.new(1,0,0,0),
+        BackgroundTransparency = 1,
+        ZIndex = card.ZIndex + 1,
+        Visible = folder.open,   -- initially respect open state
+    }, card)
+
+    local bodyLayout = layout(body, 3)
+    pad(6,6,5,6,body)
+
+    -- Render children
+    local childOrder = 0
+    for _, opt in ipairs(folder.options or {}) do
+        opt._order = childOrder; childOrder += 1
+        if     opt._type == "toggle" then renderToggle(opt, body)
+        elseif opt._type == "button" then renderButton(opt, body)
+        elseif opt._type == "label"  then renderLabel(opt,  body)
+        elseif opt._type == "slider" then renderSlider(opt, body)
+        elseif opt._type == "list"   then renderList(opt,   body)
+        elseif opt._type == "bind"   then renderBind(opt,   body)
+        end
+    end
+
+    local bodyH = 0
+    local function refreshCardSize()
+        bodyH = bodyLayout.AbsoluteContentSize.Y + 11
+        card.Size = UDim2.new(1,0,0, folder.open and (FOLDER_H + bodyH) or FOLDER_H)
+    end
+    bodyLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        task.defer(refreshCardSize)
+    end)
+    task.defer(refreshCardSize)
+
+    local fDebounce = false
+    header.InputBegan:Connect(function(i)
+        if i.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        if fDebounce then return end
+        fDebounce = true
+
+        folder.open = not folder.open
+        arrowImg.Rotation = folder.open and 180 or 0
+
+        if folder.open then
+            body.Visible = true
+            card:TweenSize(UDim2.new(1,0,0, FOLDER_H + bodyH), "Out", "Linear", 0.18, true)
+        else
+            -- Tween first, then hide body so ClipsDescendants clips during animation
+            card:TweenSize(UDim2.new(1,0,0, FOLDER_H), "Out", "Linear", 0.18, true)
+            task.delay(0.19, function()
+                if not folder.open then body.Visible = false end
+            end)
+        end
+
+        task.wait(0.22)
+        fDebounce = false
+    end)
+
+    header.MouseEnter:Connect(function() header.BackgroundColor3 = C.panel3 end)
+    header.MouseLeave:Connect(function() header.BackgroundColor3 = C.panel2 end)
+end
+
+-- ══════════════════════════════════════════════════════════
+-- WINDOW RENDERER
+-- ══════════════════════════════════════════════════════════
+local WIN_W    = 262
+local TITLE_H  = 38
+local MAX_WIN_H = 500
+
+local function renderWindow(win, gui)
+    local startX = math.floor((gui.AbsoluteSize.X - WIN_W) / 2)
+    local startY = 52
+
+    -- Drop shadow (pixel offset square)
+    local shadow = make("Frame", {
+        Size = UDim2.new(0, WIN_W+6, 0, TITLE_H+6),
+        Position = UDim2.new(0, startX+4, 0, startY+4),
+        BackgroundColor3 = C.shadow,
+        BorderSizePixel = 0,
+        ZIndex = 0,
+    }, gui)
+    win._shadow = shadow
+
+    -- Main window frame
+    local main = make("Frame", {
+        Size = UDim2.new(0, WIN_W, 0, TITLE_H),
+        Position = UDim2.new(0, startX, 0, startY),
+        BackgroundColor3 = C.bg,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,   -- ← KEY: hides everything below titlebar when minimized
+        ZIndex = 1,
+    }, gui)
+    stroke(C.hilight, 2, main)
+    win.main = main
+
+    -- ── Title bar ─────────────────────────────────────────
+    local titleBar = make("Frame", {
+        Size = UDim2.new(1,0,0,TITLE_H),
+        BackgroundColor3 = C.panel,
+        BorderSizePixel = 0,
+        ZIndex = 2,
+    }, main)
+
+    -- Bottom border on titlebar
+    make("Frame", {
+        AnchorPoint = Vector2.new(0,1),
+        Position = UDim2.new(0,0,1,0),
+        Size = UDim2.new(1,0,0,2),
+        BackgroundColor3 = C.shadow,
+        BorderSizePixel = 0,
+        ZIndex = titleBar.ZIndex + 1,
+    }, titleBar)
+
+    -- Icon block (pixel M logo)
+    local logoBlock = make("Frame", {
+        Size = UDim2.new(0,28,0,28),
+        Position = UDim2.new(0,4,0,5),
+        BackgroundColor3 = C.accent,
+        BorderSizePixel = 0,
+        ZIndex = titleBar.ZIndex + 1,
+    }, titleBar)
+    stroke(C.shadow, 2, logoBlock)
+    make("TextLabel", {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Text = "M",
+        TextSize = 16,
+        Font = PX_FONT,
+        TextColor3 = C.shadow,
+        ZIndex = logoBlock.ZIndex + 1,
+    }, logoBlock)
+
+    make("TextLabel", {
+        Size = UDim2.new(1,-68,1,0),
+        Position = UDim2.new(0,38,0,0),
+        BackgroundTransparency = 1,
+        Text = string.upper(tostring(win.title or "WINDOW")),
+        TextSize = FS_LG,
+        Font = PX_FONT,
+        TextColor3 = C.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = titleBar.ZIndex + 1,
     }, titleBar)
 
     -- Minimize button
     local minBtn = make("TextButton", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -10, 0.5, 0),
-        Size = UDim2.new(0, 24, 0, 24),
-        BackgroundColor3 = T.surface3,
-        Text = "−",
-        TextSize = 17,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = T.textDim,
+        AnchorPoint = Vector2.new(1,0.5),
+        Position = UDim2.new(1,-4,0.5,0),
+        Size = UDim2.new(0,28,0,26),
+        BackgroundColor3 = C.panel2,
+        Text = "-",
+        TextSize = 18,
+        Font = PX_FONT,
+        TextColor3 = C.textDim,
         AutoButtonColor = false,
+        BorderSizePixel = 0,
+        ZIndex = titleBar.ZIndex + 2,
     }, titleBar)
-    corner(6, minBtn)
-    uistroke(T.border, 1, minBtn)
+    stroke(C.shadow, 2, minBtn)
 
-    -- Content
-    local content = make("Frame", {
-        Position = UDim2.new(0, 0, 0, TITLE_H),
-        Size = UDim2.new(1, 0, 1, -TITLE_H),
+    -- ── Content scroll ────────────────────────────────────
+    local scroll = make("ScrollingFrame", {
+        Position = UDim2.new(0,0,0,TITLE_H),
+        Size = UDim2.new(1,0,1,-TITLE_H),
         BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ScrollBarThickness = 4,
+        ScrollBarImageColor3 = C.accent,
+        CanvasSize = UDim2.new(0,0,0,0),
+        ScrollingDirection = Enum.ScrollingDirection.Y,
+        ZIndex = 2,
+        Visible = true,
     }, main)
 
-    local contentLayout = uilayout(content, 6)
-    uipad(8, 8, 8, 10, content)
+    local contentFrame = make("Frame", {
+        Size = UDim2.new(1,0,0,0),
+        BackgroundTransparency = 1,
+        ZIndex = 2,
+    }, scroll)
 
-    -- Render options / folders
-    local order = 0
-    for _, opt in ipairs(win.options) do
-        opt._order = order; order += 1
-        if opt._type == "folder"  then renderFolder(opt, content)
-        elseif opt._type == "toggle"  then renderToggle(opt, content)
-        elseif opt._type == "button"  then renderButton(opt, content)
-        elseif opt._type == "label"   then renderLabel(opt, content)
-        elseif opt._type == "slider"  then renderSlider(opt, content)
-        elseif opt._type == "list"    then renderList(opt, content)
-        elseif opt._type == "bind"    then renderBind(opt, content)
+    local contentLayout = layout(contentFrame, 5)
+    pad(5,5,5,8,contentFrame)
+
+    -- Render folders / bare options
+    local childOrder = 0
+    for _, opt in ipairs(win.options or {}) do
+        opt._order = childOrder; childOrder += 1
+        if     opt._type == "folder" then renderFolder(opt, contentFrame)
+        elseif opt._type == "toggle" then renderToggle(opt, contentFrame)
+        elseif opt._type == "button" then renderButton(opt, contentFrame)
+        elseif opt._type == "label"  then renderLabel(opt,  contentFrame)
+        elseif opt._type == "slider" then renderSlider(opt, contentFrame)
+        elseif opt._type == "list"   then renderList(opt,   contentFrame)
+        elseif opt._type == "bind"   then renderBind(opt,   contentFrame)
         end
     end
 
+    -- Auto-fit window height
     local function autoSize()
-        local h = contentLayout.AbsoluteContentSize.Y + 18
-        main:TweenSize(
-            win.open
-                and UDim2.new(0, WIN_W, 0, TITLE_H + h)
-                or  UDim2.new(0, WIN_W, 0, TITLE_H),
-            "Out", "Quint", 0.28, true
-        )
+        local h     = contentLayout.AbsoluteContentSize.Y + 14
+        local winH  = math.min(h + TITLE_H, MAX_WIN_H)
+        contentFrame.Size  = UDim2.new(1,0,0,h)
+        scroll.CanvasSize  = UDim2.new(0,0,0,h)
+        if win.open then
+            main.Size   = UDim2.new(0,WIN_W,0,winH)
+            shadow.Size = UDim2.new(0,WIN_W+6,0,winH+6)
+        end
     end
-
-    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(autoSize)
+    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        task.defer(autoSize)
+    end)
     task.defer(autoSize)
 
+    -- ── Minimize ──────────────────────────────────────────
+    local minDebounce = false
     minBtn.MouseButton1Click:Connect(function()
+        if minDebounce then return end
+        minDebounce = true
+
         win.open = not win.open
-        minBtn.Text = win.open and "−" or "+"
-        autoSize()
+
+        if win.open then
+            -- Expand: show scroll first, then tween
+            scroll.Visible = true
+            minBtn.Text = "-"
+            minBtn.TextColor3 = C.textDim
+            local h     = contentLayout.AbsoluteContentSize.Y + 14
+            local winH  = math.min(h + TITLE_H, MAX_WIN_H)
+            main:TweenSize(UDim2.new(0,WIN_W,0,winH), "Out","Linear",0.2,true)
+            shadow:TweenSize(UDim2.new(0,WIN_W+6,0,winH+6),"Out","Linear",0.2,true)
+        else
+            -- Collapse: tween first, then hide scroll
+            -- ClipsDescendants hides content during animation
+            minBtn.Text = "+"
+            minBtn.TextColor3 = C.accent
+            main:TweenSize(UDim2.new(0,WIN_W,0,TITLE_H),"Out","Linear",0.2,true)
+            shadow:TweenSize(UDim2.new(0,WIN_W+6,0,TITLE_H+6),"Out","Linear",0.2,true)
+            task.delay(0.21, function()
+                if not win.open then
+                    scroll.Visible = false  -- fully prevent any rendering
+                end
+            end)
+        end
+
+        task.wait(0.25)
+        minDebounce = false
     end)
 
-    -- Drag
+    minBtn.MouseEnter:Connect(function()
+        minBtn.BackgroundColor3 = win.open and C.red or C.accentD
+    end)
+    minBtn.MouseLeave:Connect(function()
+        minBtn.BackgroundColor3 = C.panel2
+    end)
+
+    -- ── Drag ──────────────────────────────────────────────
     titleBar.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging     = true
-            dragObj      = main
-            dragStart    = i.Position
-            dragStartPos = main.Position
+            _drag.on     = true
+            _drag.obj    = main
+            _drag.shadow = shadow
+            _drag.start  = i.Position
+            _drag.spos   = main.Position
         end
     end)
-
-    minBtn.MouseEnter:Connect(function() tw(minBtn, { BackgroundColor3 = T.red }, 0.1) end)
-    minBtn.MouseLeave:Connect(function() tw(minBtn, { BackgroundColor3 = T.surface3 }, 0.1) end)
 end
 
 -- ══════════════════════════════════════════════════════════
--- API — METHOD INJECTOR
+-- API  —  METHOD INJECTOR
 -- ══════════════════════════════════════════════════════════
 local function injectMethods(t)
+    t.options = t.options or {}
+
     function t:AddFolder(title)
-        local f = { _type = "folder", title = title or "Section", options = {}, open = true }
+        local f = { _type="folder", title=title or "Section", options={}, open=true }
         injectMethods(f)
-        table.insert(t.options, f)
+        table.insert(self.options, f)
         return f
     end
 
     function t:AddToggle(opt)
-        opt = opt or {}
-        opt._type = "toggle"
-        opt.text  = tostring(opt.text or "Toggle")
-        opt.state = opt.state == true
-        opt.flag  = opt.flag or opt.text
-        opt.callback = type(opt.callback) == "function" and opt.callback or function() end
+        opt = type(opt)=="table" and opt or {}
+        opt._type    = "toggle"
+        opt.text     = opt.text  or "Toggle"
+        opt.state    = opt.state == true
+        opt.flag     = opt.flag  or opt.text
+        opt.callback = type(opt.callback)=="function" and opt.callback or function()end
         MorLib.flags[opt.flag] = opt.state
-        table.insert(t.options, opt)
+        table.insert(self.options, opt)
         return opt
     end
 
     function t:AddButton(opt)
-        opt = opt or {}
-        opt._type = "button"
-        opt.text  = tostring(opt.text or "Button")
-        opt.flag  = opt.flag or opt.text
-        opt.callback = type(opt.callback) == "function" and opt.callback or function() end
-        table.insert(t.options, opt)
+        opt = type(opt)=="table" and opt or {}
+        opt._type    = "button"
+        opt.text     = opt.text or "Button"
+        opt.flag     = opt.flag or opt.text
+        opt.callback = type(opt.callback)=="function" and opt.callback or function()end
+        table.insert(self.options, opt)
         return opt
     end
 
     function t:AddLabel(opt)
-        opt = opt or {}
+        opt = type(opt)=="table" and opt or {}
         opt._type = "label"
-        opt.text  = tostring(opt.text or "")
-        table.insert(t.options, opt)
+        opt.text  = opt.text or ""
+        table.insert(self.options, opt)
         return opt
     end
 
     function t:AddSlider(opt)
-        opt = opt or {}
-        opt._type  = "slider"
-        opt.text   = tostring(opt.text or "Slider")
-        opt.min    = tonumber(opt.min)   or 0
-        opt.max    = tonumber(opt.max)   or 100
-        opt.value  = math.clamp(tonumber(opt.value) or opt.min, opt.min, opt.max)
-        opt.float  = tonumber(opt.float) or 1
-        opt.flag   = opt.flag or opt.text
-        opt.callback = type(opt.callback) == "function" and opt.callback or function() end
+        opt = type(opt)=="table" and opt or {}
+        opt._type    = "slider"
+        opt.text     = opt.text  or "Slider"
+        opt.min      = tonumber(opt.min)   or 0
+        opt.max      = tonumber(opt.max)   or 100
+        opt.float    = tonumber(opt.float) or 1
+        opt.value    = math.clamp(tonumber(opt.value) or opt.min, opt.min, opt.max)
+        opt.flag     = opt.flag or opt.text
+        opt.callback = type(opt.callback)=="function" and opt.callback or function()end
         MorLib.flags[opt.flag] = opt.value
-        table.insert(t.options, opt)
+        table.insert(self.options, opt)
         return opt
     end
 
     function t:AddList(opt)
-        opt = opt or {}
-        opt._type  = "list"
-        opt.text   = tostring(opt.text or "Dropdown")
-        opt.values = type(opt.values) == "table" and opt.values or {}
-        opt.value  = tostring(opt.value or opt.values[1] or "")
-        opt.flag   = opt.flag or opt.text
-        opt.callback = type(opt.callback) == "function" and opt.callback or function() end
+        opt = type(opt)=="table" and opt or {}
+        opt._type    = "list"
+        opt.text     = opt.text   or "Dropdown"
+        opt.values   = type(opt.values)=="table" and opt.values or {}
+        opt.value    = tostring(opt.value or opt.values[1] or "")
+        opt.flag     = opt.flag   or opt.text
+        opt.callback = type(opt.callback)=="function" and opt.callback or function()end
         MorLib.flags[opt.flag] = opt.value
-        table.insert(t.options, opt)
+        table.insert(self.options, opt)
         return opt
     end
 
     function t:AddBind(opt)
-        opt = opt or {}
-        opt._type = "bind"
-        opt.text  = tostring(opt.text or "Bind")
-        opt.key   = (opt.key and (type(opt.key) == "string" and opt.key or opt.key.Name)) or "F"
-        opt.hold  = opt.hold == true
-        opt.flag  = opt.flag or opt.text
-        opt.callback = type(opt.callback) == "function" and opt.callback or function() end
+        opt = type(opt)=="table" and opt or {}
+        opt._type    = "bind"
+        opt.text     = opt.text or "Bind"
+        opt.key      = type(opt.key)=="string"   and opt.key
+                    or type(opt.key)=="userdata"  and opt.key.Name
+                    or "F"
+        opt.hold     = opt.hold == true
+        opt.flag     = opt.flag or opt.text
+        opt.callback = type(opt.callback)=="function" and opt.callback or function()end
         MorLib.flags[opt.flag] = opt.key
-        table.insert(t.options, opt)
+        table.insert(self.options, opt)
         return opt
     end
 end
 
+-- ══════════════════════════════════════════════════════════
+-- PUBLIC
+-- ══════════════════════════════════════════════════════════
 function MorLib:CreateWindow(title)
-    local win = {
-        _type   = "window",
-        title   = tostring(title or "Window"),
-        options = {},
-        open    = true,
-        _init   = false,
-    }
+    local win = { _type="window", title=title or "Window", options={}, open=true, _inited=false }
     injectMethods(win)
     table.insert(self.windows, win)
     return win
@@ -867,19 +1099,27 @@ function MorLib:Init()
 
     self.gui = gui
     for _, win in ipairs(self.windows) do
-        if not win._init then
-            win._init = true
+        if not win._inited then
+            win._inited = true
             renderWindow(win, gui)
         end
     end
     return gui
 end
 
-function MorLib:Close()
+-- Hide/show all windows (RightControl default)
+function MorLib:Toggle()
     self.open = not self.open
     for _, win in ipairs(self.windows) do
-        if win.main then win.main.Visible = self.open end
+        if win.main   then win.main.Visible   = self.open end
+        if win._shadow then win._shadow.Visible = self.open end
     end
 end
+
+UserInputService.InputBegan:Connect(function(i)
+    if i.KeyCode == Enum.KeyCode.RightControl then
+        MorLib:Toggle()
+    end
+end)
 
 return MorLib
