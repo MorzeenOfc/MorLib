@@ -1,16 +1,5 @@
 -- ═══════════════════════════════════════════════════════════
--- MORLIB PIXEL UI  |  REWORKED BY CHATGPTECA
--- Visual totalmente reformulado:
--- ✔ Sem estilo hacker
--- ✔ Sem [ ] nas letras
--- ✔ Fonte arcade/pixel REAL
--- ✔ Proporções corrigidas
--- ✔ Espaçamento corrigido
--- ✔ Abas/folders alinhadas
--- ✔ Sem fundo bugado atrás
--- ✔ Layout moderno pixel game
--- ✔ Scroll corrigido
--- ✔ Responsividade melhor
+-- MORLIB
 -- ═══════════════════════════════════════════════════════════
 
 local MorLib = {
